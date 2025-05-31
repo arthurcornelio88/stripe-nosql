@@ -1,7 +1,12 @@
-prendre screenshots
+tester make
+
+prendre screenshots pour readme
 - streamlit !
 - mongosh
 - faire tdgraph pour olap oltp nosql
+
+orchestration
+- attention pour les repos d'avant : uv init && uv venv && source .venv/bin/activate 
 
 # streamlit cloud apres, car, github.
 
