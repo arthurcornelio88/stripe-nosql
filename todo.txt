@@ -1,21 +1,7 @@
-git clone link
-uv venv
-uv sync
-source .venv/bin/activate
-
-main scripts
-gcs_to_mongo.py
- 
-pytest !  asdasd
-
-mongosh
-- install docker
-- connections, requetes
---> ou, sans docker, mongo_queries.py
-
-api fastapi uvicorn + streamlit
-- leger traitement pour meilleiure visu sur streamlit (au lieu d`un gros json apres filtrage)
-- fonctionne sur local, prendre des screenshots
+prendre screenshots
+- streamlit !
+- mongosh
+- faire tdgraph pour olap oltp nosql
 
 # streamlit cloud apres, car, github.
 

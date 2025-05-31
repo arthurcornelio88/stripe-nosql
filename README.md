@@ -79,7 +79,7 @@ Launch locally:
 make api
 ```
 
-More details in [📄 MongoDB + FastAPI + Streamlit](./mongodb_fastapi_streamlit.md)
+More details in [📄 MongoDB + FastAPI + Streamlit](docs/mongodb_fastapi_streamlit.md)
 
 ---
 
@@ -105,7 +105,7 @@ make mongosh
 This launches `mongosh` via Docker, connected to your local DB.
 
 For advanced queries, aggregation, and inspection examples, see:
-[📄 Mongosh Guide](./mongosh_guide.md)
+[📄 Mongosh Guide](docs/mongosh_guide.md)
 
 ---
 
