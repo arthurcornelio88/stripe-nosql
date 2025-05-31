@@ -1,0 +1,28 @@
+# Python-generated files
+__pycache__/
+*.py[oc]
+build/
+dist/
+wheels/
+*.egg-info
+
+# Virtual environments
+.venv
+
+# GCP
+gcp_service_account.json
+
+# Environment variables ##
+.env.prod
+.env
+.env.snowflake
+
+# Pytest
+.pytest_cache/
+
+#Python
+.python-version
+
+# Data
+olap_outputs/
+
