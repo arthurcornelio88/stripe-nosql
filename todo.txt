@@ -6,7 +6,7 @@ source .venv/bin/activate
 main scripts
 gcs_to_mongo.py
  
-pytest !
+pytest !  asdasd
 
 mongosh
 - install docker
