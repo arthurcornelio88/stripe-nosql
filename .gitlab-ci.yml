@@ -7,7 +7,7 @@ services:
 
 variables:
   ENV: test
-  MONGO_URI: mongodb://localhost:27017
+  MONGO_URI: mongodb://mongo:27017
   PYTHONPATH: $CI_PROJECT_DIR
 
 before_script:
