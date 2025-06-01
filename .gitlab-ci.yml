@@ -1,0 +1,23 @@
+stages:
+  - run
+
+services:
+  - name: mongo:7
+    alias: mongo
+
+variables:
+  ENV: test
+  MONGO_URI: mongodb://localhost:27017
+  PYTHONPATH: $CI_PROJECT_DIR
+
+before_script:
+  - export PATH="$HOME/.local/bin:$PATH"
+  - make uv
+
+run:
+  stage: run
+  script:
+    - echo "🚀 Running make all"
+    - make all
+  only:
+    - main
