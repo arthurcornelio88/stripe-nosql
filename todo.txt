@@ -1,5 +1,3 @@
-tester make
-
 prendre screenshots pour readme
 - streamlit !
 - mongosh

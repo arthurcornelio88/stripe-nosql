@@ -41,7 +41,9 @@ mongosh: ## Open mongosh via Docker container
 	docker run -it --rm --network host mongo:7 mongosh "mongodb://localhost:27017"
 
 all: ## Run up, load, api and ui in one command
+ifndef CI
 	$(MAKE) up
+endif
 	$(MAKE) load
 	$(MAKE) api &
 	$(MAKE) ui
