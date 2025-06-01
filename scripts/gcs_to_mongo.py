@@ -4,8 +4,14 @@ from pymongo import MongoClient
 from gcp import configure_gcp_credentials
 from nosql_io import load_latest_oltp_json_from_gcs
 
-# Paramètres d’environnement
-MONGO_URI = os.getenv("MONGO_URI", "mongodb://localhost:27017")
+ENV = os.getenv("ENV", "DEV").upper()
+
+# MongoDB connection
+if ENV == "DEV":
+    MONGO_URI = os.getenv("MONGO_URI", "mongodb://localhost:27017")
+else:  # TEST or PROD
+    MONGO_URI = os.getenv("MONGO_URI", "mongodb://mongo:27017")
+
 MONGO_DB = os.getenv("MONGO_DB", "supabase_snapshot")
 
 def insert_collections_into_mongo(data: dict, db_name: str):

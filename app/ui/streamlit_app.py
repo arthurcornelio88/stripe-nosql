@@ -6,8 +6,14 @@ import os
 
 app = FastAPI()
 
+ENV = os.getenv("ENV", "DEV").upper()
+
 # MongoDB connection
-MONGO_URI = os.getenv("MONGO_URI", "mongodb://localhost:27017")
+if ENV == "DEV":
+    MONGO_URI = os.getenv("MONGO_URI", "mongodb://localhost:27017")
+else:  # TEST or PROD
+    MONGO_URI = os.getenv("MONGO_URI", "mongodb://mongo:27017")
+    
 client = MongoClient(MONGO_URI)
 db = client["supabase_snapshot"]
 
