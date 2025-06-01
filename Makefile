@@ -14,7 +14,7 @@ uv: ## Install project with uv (creates .venv)
 	@wget -qO- https://astral.sh/uv/install.sh | sh
 	@uv venv
 	@$(PYTHON) --version
-	@uv pip install -r requirements.txt
+	@uv sync
 
 up: ## Start MongoDB with Docker
 	docker-compose up -d
