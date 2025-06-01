@@ -6,11 +6,11 @@ from nosql_io import load_latest_oltp_json_from_gcs
 
 ENV = os.getenv("ENV", "DEV").upper()
 
-# MongoDB connection
-if ENV == "DEV":
-    MONGO_URI = os.getenv("MONGO_URI", "mongodb://localhost:27017")
-else:  # TEST or PROD
-    MONGO_URI = os.getenv("MONGO_URI", "mongodb://mongo:27017")
+# MongoDB connection for both DEV and PROD/TEST environments
+if "MONGO_URI" in os.environ:
+    MONGO_URI = os.environ["MONGO_URI"]
+else:
+    MONGO_URI = "mongodb://localhost:27017" if ENV == "DEV" else "mongodb://mongo:27017"
 
 print(f"🌍 ENV={ENV} → using Mongo URI: {MONGO_URI}")
 
