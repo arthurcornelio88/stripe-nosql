@@ -3,6 +3,8 @@ prendre screenshots pour readme
 - mongosh
 - faire tdgraph pour olap oltp nosql
 
+refaire readme pour parler du nouveau push from gitlab
+
 orchestration
 - attention pour les repos d'avant : uv init && uv venv && source .venv/bin/activate 
 
