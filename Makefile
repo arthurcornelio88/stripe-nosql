@@ -13,8 +13,8 @@ uv: ## Install project with uv (creates .venv)
 	@echo "📦 Installing Python environment with uv..."
 	@wget -qO- https://astral.sh/uv/install.sh | sh
 	@uv venv
-	@$(PYTHON) --version
 	@uv sync
+	@$(PYTHON) --version
 
 up: ## Start MongoDB with Docker
 	docker-compose up -d
