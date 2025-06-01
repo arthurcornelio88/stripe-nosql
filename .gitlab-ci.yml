@@ -12,6 +12,7 @@ variables:
 
 before_script:
   - export PATH="$HOME/.local/bin:$PATH"
+  - export PYTHONPATH="$(pwd)" 
   - make uv
 
 run:
