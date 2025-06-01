@@ -12,6 +12,8 @@ if ENV == "DEV":
 else:  # TEST or PROD
     MONGO_URI = os.getenv("MONGO_URI", "mongodb://mongo:27017")
 
+print(f"🌍 ENV={ENV} → using Mongo URI: {MONGO_URI}")
+
 MONGO_DB = os.getenv("MONGO_DB", "supabase_snapshot")
 
 def insert_collections_into_mongo(data: dict, db_name: str):
