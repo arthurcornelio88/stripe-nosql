@@ -27,12 +27,12 @@ endif
 else
 	@echo "🏗️  Running in CI/CD (ENV=$(ENV))"
 	$(MAKE) load
-	$(MAKE) push_to_github HEAD:main
+	$(MAKE) push_to_github 
 endif
 
 prod_deploy: check_env ## Run only data load + GitHub push (PROD)
 	$(MAKE) load
-	$(MAKE) push_to_github HEAD:main
+	$(MAKE) push_to_github
 
 # ----------- Pipeline Components -----------
 
@@ -56,7 +56,7 @@ ui: ## Launch Streamlit dashboard (DEV only)
 
 push_to_github: ## Push code to GitHub for Streamlit Cloud
 	git remote -v | grep github || git remote add github $(GITHUB_REPO)
-	git push github main
+	git push github main HEAD:main
 	@echo "✅ Pushed to GitHub for Streamlit Cloud"
 
 # ----------- Utils -----------
