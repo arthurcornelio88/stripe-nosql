@@ -1,25 +1,34 @@
-# 🧪 MongoDB Shell (mongosh) — Guide for Exploration & Debugging
+# 🧪 MongoDB Shell (mongosh) — Local & Prod Guide
 
-This guide helps you quickly get started with **`mongosh`**, the MongoDB shell, for inspecting and querying your local MongoDB instance loaded with Supabase-style data dumps.
+This guide helps you inspect and query your MongoDB database — whether you're working locally or in production (MongoDB Atlas via FastAPI or Streamlit).
 
 ---
 
-## 🐳 1. Installing mongosh with Docker
+## 📍 Overview
 
-If `mongosh` is not available on your system or not supported (e.g., Ubuntu 24.04), use the official Docker image:
+| Context | Mongo URI                         | Usage                   |
+| ------- | --------------------------------- | ----------------------- |
+| Local   | `mongodb://localhost:27017`       | Docker/Dev/CI           |
+| Prod    | `mongodb+srv://...` (Mongo Atlas) | Deployed API, Streamlit |
+
+---
+
+## 💻 1. Local MongoDB with Docker (mongosh)
+
+If `mongosh` isn't installed or not supported (e.g., Ubuntu 24.04), use:
 
 ```bash
 docker run -it --rm --network host mongo:7 mongosh "mongodb://localhost:27017"
 ```
 
-You can alias this for convenience:
+Alias for convenience:
 
 ```bash
 echo "alias mongo-local='docker run -it --rm --network host mongo:7 mongosh \"mongodb://localhost:27017\"'" >> ~/.zshrc
 source ~/.zshrc
 ```
 
-Then use:
+Then simply:
 
 ```bash
 mongo-local
@@ -27,23 +36,46 @@ mongo-local
 
 ---
 
-## ⚙️ 2. Connecting to MongoDB (local)
+## ☁️ 2. Production MongoDB with Atlas
 
-When using `mongosh` (Docker or native), connect like this:
+Your production deployments (Render, Streamlit Cloud) must use a remote MongoDB instance — typically **MongoDB Atlas**.
+
+### ✍️ How to get your Mongo URI (`MONGO_URI`)
+
+1. Go to [https://cloud.mongodb.com](https://cloud.mongodb.com)
+2. Create a **free cluster**
+3. Under “Database Access” → Add a database user (username/password)
+4. Under “Network Access” → Allow IPs (`0.0.0.0/0` or restrict to Render)
+5. Click “Connect” → “Connect your application”
+6. Copy the URI:
+
+```
+mongodb+srv://<user>:<pass>@cluster0.xxxxx.mongodb.net/supabase_snapshot?retryWrites=true&w=majority
+```
+
+Use this as the value for `MONGO_URI` in:
+
+* Render env vars
+* Streamlit `secrets.toml`
+* Local `.env.prod` if needed
+
+---
+
+## ⚙️ 3. Connecting to MongoDB (Local or Atlas)
+
+### Local:
 
 ```bash
 mongosh "mongodb://localhost:27017"
 ```
 
-You should see:
+### Atlas:
 
-```
-Using MongoDB: 7.0.x
-Using Mongosh: 2.x
-Connecting to: mongodb://localhost:27017/?...
+```bash
+mongosh "mongodb+srv://<user>:<pass>@cluster.mongodb.net/supabase_snapshot"
 ```
 
-Switch to your DB:
+Then:
 
 ```js
 use supabase_snapshot
@@ -51,37 +83,17 @@ use supabase_snapshot
 
 ---
 
-## 🔍 3. Explore collections
+## 🔍 4. Explore Collections
 
 ```js
 show collections
-```
-
-Example:
-
-```
-charges
-customers
-invoices
-payment_intents
-subscriptions
-```
-
-Read one document:
-
-```js
 db.customers.findOne()
-```
-
-Count:
-
-```js
 db.subscriptions.countDocuments()
 ```
 
 ---
 
-## 🧠 4. Example queries for inspection & fraud detection
+## 🧠 5. Example Queries
 
 ### 💰 Charges > 1000€
 
@@ -98,7 +110,7 @@ db.charges.aggregate([
 ])
 ```
 
-### 🔐 3D Secure activated intents
+### 🔐 3D Secure intents
 
 ```js
 db.payment_intents.find({
@@ -114,48 +126,35 @@ db.subscriptions.find({ status: "active" })
 
 ---
 
-## 🧪 Alternative: explore with Python (mongo\_queries.py)
-
-If you don’t want to use `mongosh`, you can interact via `pymongo`:
+## 🐍 6. Python Alternative (`mongo_queries.py`)
 
 ```python
 from pymongo import MongoClient
 
-client = MongoClient("mongodb://localhost:27017")
+client = MongoClient("mongodb://localhost:27017")  # or MONGO_URI from Atlas
 db = client["supabase_snapshot"]
 
-charges = list(db.charges.find({"amount": {"$gt": 1000}}))
-for charge in charges:
-    print(charge["id"], charge["amount"])
+for c in db.charges.find({"amount": {"$gt": 1000}}):
+    print(c["id"], c["amount"])
 ```
 
 ---
 
-## 📎 Summary
-
-| Task                 | Method                                    |
-| -------------------- | ----------------------------------------- |
-| CLI inspection       | `mongosh` or `docker run mongo:7 mongosh` |
-| Programmatic queries | Python + `pymongo`                        |
-| GUI                  | MongoDB Compass (optional)                |
-
----
-
-## 🧼 Tip: clear or reload a collection
+## 🧼 7. Wipe or reload a collection
 
 ```js
-db.customers.drop()             // deletes the collection
-mongoimport --jsonArray ...    // reload from dump
+db.customers.drop()
+mongoimport --jsonArray ...
 ```
 
 ---
 
 ## ✅ Conclusion
 
-Use `mongosh` as your go-to debugging tool to:
+Use `mongosh` locally or connect to Atlas in prod:
 
-* Inspect collections
-* Test aggregation logic
-* Understand raw data before modeling it for FastAPI or analytics
+* ⚙️ Debug and inspect real data
+* 🔁 Query before embedding into API logic
+* 🔍 Validate fraud logic, aggregations, filters
 
-Fast, stateless, and always useful in any NoSQL stack 💡
+Stateless, powerful, and works across local and cloud.

@@ -2,8 +2,7 @@ from fastapi import FastAPI
 from pymongo import MongoClient
 from bson import ObjectId
 import os
-
-app = FastAPI()
+import certifi
 
 ENV = os.getenv("ENV", "DEV").upper()
 
@@ -13,7 +12,8 @@ if ENV == "DEV":
 else:  # TEST or PROD
     MONGO_URI = os.getenv("MONGO_URI", "mongodb://mongo:27017")
 
-client = MongoClient(MONGO_URI)
+#client = MongoClient(MONGO_URI)
+client = MongoClient(MONGO_URI, tlsCAFile=certifi.where())
 db = client["supabase_snapshot"]
 
 def convert_objectid(doc):
