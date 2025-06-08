@@ -4,6 +4,8 @@ from bson import ObjectId
 import os
 import certifi
 
+app = FastAPI()
+
 ENV = os.getenv("ENV", "DEV").upper()
 
 # MongoDB connection
