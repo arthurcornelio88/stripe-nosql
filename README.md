@@ -1,19 +1,23 @@
-# 📦 Supabase Snapshot — FastAPI + MongoDB + Streamlit
+# 📦 NoSQL - Supabase Snapshot + MongoDB + FastAPI + Streamlit
 
-This repository connects OLTP and OLAP flows with a NoSQL (MongoDB) intermediary, offering a local and visual interface for Supabase-style JSON data dumps.
+This repository bridges OLTP and OLAP workflows using **MongoDB** as a NoSQL intermediary, offering a clean local + cloud interface to load and explore Supabase-style JSON exports.
+
+It supports full-stack deployment across **DEV** (local) and **PROD** (Render + Streamlit Cloud) environments using a `Makefile`-based pipeline and environment-driven logic.
 
 ---
 
 ## 🚀 Getting Started
 
-### 🔁 Clone the repo
+### 🌀 Clone the repository
+
 ```bash
 git clone https://gitlab.com/stripe_b2/nosql.git
 cd nosql
-```
+````
 
-### 🐍 Create and activate virtual environment
-We use [`uv`](https://github.com/astral-sh/uv) for speed:
+### 🐍 Set up your virtual environment
+
+We recommend [`uv`](https://github.com/astral-sh/uv) for fast dependency installs:
 
 ```bash
 uv venv
@@ -23,99 +27,142 @@ uv sync
 
 ---
 
-## 🛠️ Run Everything
+## 🛠️ Project Pipeline via Makefile
 
-### Use the Makefile:
-```bash
-make help
-```
-Key commands:
-- `make up` → Launch MongoDB container
-- `make load` → Load Supabase JSON dump into MongoDB
-- `make api` → Start FastAPI backend
-- `make ui` → Launch Streamlit dashboard
-- `make mongosh` → Open the Mongo shell
+Run `make help` to list all available targets.
 
-You can also run everything in one go:
+### 🔧 DEV Mode (local development)
+
 ```bash
-make all
+make all ENV=DEV
 ```
+
+This starts:
+
+* MongoDB via Docker
+* A data load from GCS (or local)
+* FastAPI backend via Uvicorn
+* Streamlit dashboard in a new tab
+
+### 🚀 PROD Mode (CI/CD & cloud deployments)
+
+```bash
+make prod_deploy ENV=PROD
+```
+
+This runs:
+
+* Supabase → MongoDB data ingestion
+* Git push to GitHub (for Streamlit Cloud triggers)
 
 ---
 
-## 📜 Main Script — `gcs_to_mongo.py`
+## 🧠 MongoDB Shell (Local & Atlas)
 
-This script:
-- Loads latest `db_dump_prod_*.json` from GCS
-- Parses and inserts data into MongoDB (by entity/collection)
+Explore your database manually:
 
-Launch manually:
 ```bash
-ENV=PROD python scripts/gcs_to_mongo.py
+make mongosh
 ```
+
+To learn manual connection URIs, example aggregation queries, and how to debug your collections:
+
+👉 Read [📄 MongoDB Shell & Query Cheatsheet](docs/mongosh_guide.md)
 
 ---
 
-## 🧪 Testing
+## 🔌 Backend API — FastAPI
 
-```bash
-make test
-```
-- Uses `mongomock` for in-memory testing
-- Validates structure and ingestion logic
+The backend is environment-aware (`ENV=DEV|PROD`) and connects to either local Mongo or Atlas. It exposes:
 
----
+* `/customers`, `/customers/{id}`
+* `/subscriptions/active`
+* `/charges/fraud`
+* `/payment_intents/3ds`
 
-## 🔌 Backend API (FastAPI)
+Run locally:
 
-Main file: `app/api/main.py`
-- `/customers`, `/customers/{id}`
-- `/subscriptions/active`
-- `/payment_intents/3ds`
-- `/charges/fraud`
-
-Launch locally:
 ```bash
 make api
 ```
 
-More details in [📄 MongoDB + FastAPI + Streamlit](docs/mongodb_fastapi_streamlit.md)
-
 ---
 
-## 📊 UI (Streamlit)
+## 📊 Frontend UI — Streamlit
 
-Main file: `app/ui/streamlit_app.py`
-- Query backend API
-- Explore customer info, subscriptions, charges visually
+The Streamlit app reads from your backend API and lets you:
 
-Launch with:
+* Inspect customers, subscriptions, payment intents, and fraud patterns
+* Query by endpoint
+* Visualize 3DS usage and suspicious charges
+
+Run locally:
+
 ```bash
 make ui
 ```
 
 ---
 
-## 🧠 Mongo Shell (`mongosh`)
+## 📜 Data Loader — `gcs_to_mongo.py`
 
-Explore your MongoDB data manually:
+The primary data ingestion script:
+
+* Downloads the latest Supabase-style `db_dump_prod_*.json` from GCS
+* Parses JSON by collection
+* Writes to MongoDB
+
+Run standalone:
+
 ```bash
-make mongosh
+ENV=PROD python scripts/gcs_to_mongo.py
 ```
-This launches `mongosh` via Docker, connected to your local DB.
-
-For advanced queries, aggregation, and inspection examples, see:
-[📄 Mongosh Guide](docs/mongosh_guide.md)
 
 ---
 
-## ✅ Recap
+## ✅ Command Recap
 
-| Task            | Tool     | Command         |
-|------------------|----------|------------------|
-| Load JSON data   | Python   | `make load`      |
-| Backend API      | FastAPI  | `make api`       |
-| Frontend UI      | Streamlit| `make ui`        |
-| Query DB Shell   | mongosh  | `make mongosh`   |
-| Run all          | Make     | `make all`       |
-| Tests            | Pytest   | `make test`      |
+| Task                 | Tool      | Command                     |
+| -------------------- | --------- | --------------------------- |
+| Start MongoDB        | Docker    | `make up`                   |
+| Load JSON to MongoDB | Python    | `make load`                 |
+| Launch API (DEV)     | FastAPI   | `make api`                  |
+| Launch UI (DEV)      | Streamlit | `make ui`                   |
+| Query DB manually    | mongosh   | `make mongosh`              |
+| Full local pipeline  | Makefile  | `make all ENV=DEV`          |
+| Deploy to cloud      | Makefile  | `make prod_deploy ENV=PROD` |
+| Run tests            | pytest    | `make test`                 |
+
+---
+
+## 📚 Documentation
+
+* [🥪 MongoDB Shell & Query Cheatsheet](docs/mongosh_guide.md) — manual queries & shell usage
+* [💃 Integration Guide (Mongo + FastAPI + Streamlit)](docs/streamlit.md) — fullstack architecture, local & cloud setup
+
+---
+
+## 🌐 Architecture
+
+```
+Supabase JSON (GCS/local)
+         ↓
+      MongoDB
+         ↓
+    FastAPI Backend
+         ↓
+   Streamlit Frontend
+```
+
+---
+
+## ☁️ Deployment Matrix
+
+| Mode | MongoDB          | API     | UI                  |
+| ---- | ---------------- | ------- | ------------------- |
+| DEV  | Local via Docker | Uvicorn | Streamlit localhost |
+| PROD | MongoDB Atlas    | Render  | Streamlit Cloud     |
+
+---
+
+Want to contribute or adapt this setup to your own OLAP/OLTP bridge? PRs welcome ✨
