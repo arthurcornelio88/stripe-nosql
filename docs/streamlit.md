@@ -1,6 +1,6 @@
-# 🗃️ MongoDB + FastAPI + Streamlit Integration Guide
+# 🗃️ MongoDB + FastAPI + Streamlit Integration Guide (DEV & PROD Modes)
 
-This documentation explains how to integrate **MongoDB** with **FastAPI** as a backend API layer and **Streamlit** as the frontend interface for querying and visualizing data. It is based on a real-world implementation handling Supabase exports.
+This guide explains how to integrate **MongoDB**, **FastAPI**, and **Streamlit**, supporting both **local development (DEV)** and **production deployment (PROD)** with MongoDB Atlas and Render.
 
 ---
 
@@ -13,15 +13,17 @@ graph TD
     FastAPI --> Streamlit UI
 ```
 
-* **MongoDB** stores JSON-formatted structured/semi-structured data.
-* **FastAPI** serves REST endpoints to query and aggregate data from MongoDB.
-* **Streamlit** provides a developer-friendly UI to explore that data.
+* MongoDB stores Supabase-style JSON exports.
+* FastAPI exposes REST endpoints over HTTP.
+* Streamlit interacts with those endpoints to explore the data.
 
 ---
 
 ## ⚙️ 1. MongoDB Setup
 
-MongoDB is launched via Docker Compose:
+### 🔧 Local (DEV mode)
+
+Use Docker Compose:
 
 ```yaml
 services:
@@ -35,21 +37,40 @@ volumes:
   mongo_data:
 ```
 
-Use `mongoimport` or a Python script to load JSON dumps from Supabase into collections such as `customers`, `charges`, `subscriptions`...
+Import your Supabase exports into collections (`customers`, `charges`, `subscriptions`, etc.).
+
+### ☁️ Production (PROD mode)
+
+Use MongoDB Atlas:
+
+1. Create a free cluster on [cloud.mongodb.com](https://cloud.mongodb.com)
+2. Add a database user (username/password)
+3. Under **Network Access**, allow static IPs from Render
+4. Copy your connection URI from "Connect your application"
 
 ---
 
-## 🚀 2. FastAPI Backend
+## 🚀 2. FastAPI Backend (DEV/PROD aware)
 
-### 📁 Example directory: `app/api/main.py`
+### 📁 `app/api/main.py`
 
 ```python
 from fastapi import FastAPI
 from pymongo import MongoClient
 from bson import ObjectId
+import os, certifi
 
 app = FastAPI()
-client = MongoClient("mongodb://localhost:27017")
+ENV = os.getenv("ENV", "DEV").upper()
+
+if ENV == "DEV":
+    MONGO_URI = os.getenv("MONGO_URI", "mongodb://localhost:27017")
+elif ENV == "PROD":
+    MONGO_URI = os.getenv("MONGO_URI")
+else:
+    raise ValueError("Invalid ENV variable. Must be DEV or PROD")
+
+client = MongoClient(MONGO_URI, tlsCAFile=certifi.where())
 db = client["supabase_snapshot"]
 
 def convert_objectid(doc):
@@ -65,109 +86,69 @@ def get_customer(customer_id: str):
     return convert_objectid(db.customers.find_one({"id": customer_id}))
 ```
 
-Additional endpoints serve:
-
-* `/subscriptions/active`
-* `/charges/fraud`
-* `/payment_intents/3ds`
-
 ---
 
-## 🖥️ 3. Streamlit Frontend
+## 🖥️ 3. Streamlit Frontend (DEV/PROD aware)
 
-### 📁 Example file: `app/ui/streamlit_app.py`
+### 📁 `app/ui/streamlit_app.py`
 
 ```python
 import streamlit as st
 import requests
+import os
 
-API_URL = "http://localhost:8000"
+ENV = os.getenv("ENV", "DEV").upper()
+if ENV == "DEV":
+    API_URL = "http://localhost:8000"
+elif ENV in ["TEST", "PROD"]:
+    API_URL = os.getenv("API_URL")
+else:
+    raise ValueError("Invalid ENV variable. Must be DEV, TEST, or PROD")
 
 customers = requests.get(f"{API_URL}/customers").json()
 selected = st.selectbox("Choose customer", [f"{c['name']} ({c['email']})" for c in customers])
-```
 
-When a customer is selected:
-
-```python
 customer_id = [c['id'] for c in customers if f"{c['name']} ({c['email']})" == selected][0]
 data = requests.get(f"{API_URL}/customers/{customer_id}").json()
 st.write(data)
 ```
 
-Streamlit provides interactive views:
-
-* Active subscriptions
-* 3DS-secured payments
-* Potentially fraudulent charges (aggregated in Mongo)
-
 ---
 
-## 🧪 Benefits
+## 📎 Environment Configuration
 
-| Feature   | Benefit                                                           |
-| --------- | ----------------------------------------------------------------- |
-| MongoDB   | Flexible JSON support, easy import from Supabase dumps            |
-| FastAPI   | High-performance, async-compatible, easy to expose REST endpoints |
-| Streamlit | Lightweight frontend for data analyst/dev teams                   |
+### `.env`
 
----
-
-## 🧱 Recommended Project Structure
-
-```
-project/
-├── app/
-│   ├── api/
-│   │   └── main.py         # FastAPI app
-│   └── ui/
-│       └── streamlit_app.py # Streamlit dashboard
-├── docker-compose.yml      # MongoDB container
-├── Makefile                # Dev shortcuts (run, test, load)
-└── requirements.txt        # Python dependencies
+```env
+ENV=PROD
+MONGO_URI="mongodb+srv://<user>:<password>@your-cluster.mongodb.net/supabase_snapshot?retryWrites=true&w=majority"
+API_URL="https://your-api.onrender.com"
 ```
 
----
-
-## 📎 Requirements
-
-```txt
-fastapi
-uvicorn
-pymongo
-streamlit
-requests
-python-dotenv
-```
+Load it using `python-dotenv` or Render's environment tab.
 
 ---
 
-## 🌐 Deployment (optional)
+## ☁️ 4. Render Deployment (for PROD)
 
-* Run FastAPI using:
+1. Push your FastAPI repo to GitLab
+2. Create a new **Web Service** on [Render.com](https://render.com)
 
-  ```bash
-  uvicorn app.api.main:app --reload
-  ```
-* Run Streamlit locally:
+   * Build Command: `pip install -r requirements.txt`
+   * Start Command: `uvicorn app.api.main:app --host 0.0.0.0 --port 10000`
+3. Add environment variables in Render:
 
-  ```bash
-  streamlit run app/ui/streamlit_app.py
-  ```
-
-To deploy Streamlit on Streamlit Cloud:
-
-* Use `requirements.txt`
-* Add `secrets.toml` if needed for MongoDB Atlas
+   * `ENV=PROD`
+   * `MONGO_URI=...`
+4. Get Render's **outbound IPs** (e.g. `18.156.158.53`) and whitelist them in MongoDB Atlas
 
 ---
 
 ## ✅ Conclusion
 
-This stack lets you:
+| Mode | Mongo                 | API        | Frontend              |
+| ---- | --------------------- | ---------- | --------------------- |
+| DEV  | Local (Docker)        | Uvicorn    | Streamlit (localhost) |
+| PROD | MongoDB Atlas (cloud) | Render API | Streamlit Cloud       |
 
-* Load and store Supabase-style JSON dumps into MongoDB
-* Query that data efficiently via FastAPI
-* Explore, visualize, and validate your pipeline through a lightweight Streamlit UI
-
-A powerful, flexible foundation for any modern data app.
+This setup gives you a secure, modular pipeline from raw Supabase exports to a hosted Streamlit UI that works in both development and production contexts.

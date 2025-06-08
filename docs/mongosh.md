@@ -1,34 +1,36 @@
-# 🧪 MongoDB Shell (mongosh) — Local & Prod Guide
+# 🥪 MongoDB Shell & Query Cheatsheet (Local & Prod)
 
-This guide helps you inspect and query your MongoDB database — whether you're working locally or in production (MongoDB Atlas via FastAPI or Streamlit).
+This quick-reference guide helps you inspect and query your MongoDB database from the command line or Python, whether you're working locally or in production.
 
 ---
 
 ## 📍 Overview
 
-| Context | Mongo URI                         | Usage                   |
-| ------- | --------------------------------- | ----------------------- |
-| Local   | `mongodb://localhost:27017`       | Docker/Dev/CI           |
-| Prod    | `mongodb+srv://...` (Mongo Atlas) | Deployed API, Streamlit |
+| Context | Mongo URI                         | Usage              |
+| ------- | --------------------------------- | ------------------ |
+| Local   | `mongodb://localhost:27017`       | Docker/Dev/CI      |
+| Prod    | `mongodb+srv://...` (Mongo Atlas) | FastAPI, Streamlit |
+
+> ✉️ For full setup instructions and deployment logic, see the [Integration Guide](./mongodb_fastapi_streamlit.md).
 
 ---
 
-## 💻 1. Local MongoDB with Docker (mongosh)
+## 💻 1. Local MongoDB with Docker + mongosh
 
-If `mongosh` isn't installed or not supported (e.g., Ubuntu 24.04), use:
+If `mongosh` isn't installed:
 
 ```bash
 docker run -it --rm --network host mongo:7 mongosh "mongodb://localhost:27017"
 ```
 
-Alias for convenience:
+Optional alias:
 
 ```bash
 echo "alias mongo-local='docker run -it --rm --network host mongo:7 mongosh \"mongodb://localhost:27017\"'" >> ~/.zshrc
 source ~/.zshrc
 ```
 
-Then simply:
+Then run:
 
 ```bash
 mongo-local
@@ -36,46 +38,15 @@ mongo-local
 
 ---
 
-## ☁️ 2. Production MongoDB with Atlas
+## ☁️ 2. Production Atlas Connection
 
-Your production deployments (Render, Streamlit Cloud) must use a remote MongoDB instance — typically **MongoDB Atlas**.
-
-### ✍️ How to get your Mongo URI (`MONGO_URI`)
-
-1. Go to [https://cloud.mongodb.com](https://cloud.mongodb.com)
-2. Create a **free cluster**
-3. Under “Database Access” → Add a database user (username/password)
-4. Under “Network Access” → Allow IPs (`0.0.0.0/0` or restrict to Render)
-5. Click “Connect” → “Connect your application”
-6. Copy the URI:
-
-```
-mongodb+srv://<user>:<pass>@cluster0.xxxxx.mongodb.net/supabase_snapshot?retryWrites=true&w=majority
-```
-
-Use this as the value for `MONGO_URI` in:
-
-* Render env vars
-* Streamlit `secrets.toml`
-* Local `.env.prod` if needed
-
----
-
-## ⚙️ 3. Connecting to MongoDB (Local or Atlas)
-
-### Local:
-
-```bash
-mongosh "mongodb://localhost:27017"
-```
-
-### Atlas:
+To connect from your terminal:
 
 ```bash
 mongosh "mongodb+srv://<user>:<pass>@cluster.mongodb.net/supabase_snapshot"
 ```
 
-Then:
+Then switch DB:
 
 ```js
 use supabase_snapshot
@@ -83,7 +54,7 @@ use supabase_snapshot
 
 ---
 
-## 🔍 4. Explore Collections
+## 🔍 3. Explore Collections
 
 ```js
 show collections
@@ -93,7 +64,7 @@ db.subscriptions.countDocuments()
 
 ---
 
-## 🧠 5. Example Queries
+## 🧠 4. Example Queries
 
 ### 💰 Charges > 1000€
 
@@ -101,7 +72,7 @@ db.subscriptions.countDocuments()
 db.charges.find({ amount: { $gt: 1000 } })
 ```
 
-### 🧮 Group charges by customer
+### 🧰 Group charges by customer
 
 ```js
 db.charges.aggregate([
@@ -126,7 +97,7 @@ db.subscriptions.find({ status: "active" })
 
 ---
 
-## 🐍 6. Python Alternative (`mongo_queries.py`)
+## 🐍 5. Python CLI Alternative
 
 ```python
 from pymongo import MongoClient
@@ -140,21 +111,21 @@ for c in db.charges.find({"amount": {"$gt": 1000}}):
 
 ---
 
-## 🧼 7. Wipe or reload a collection
+## 🧼 6. Reset or Reload Collections
 
 ```js
 db.customers.drop()
-mongoimport --jsonArray ...
+mongoimport --jsonArray --db supabase_snapshot --collection customers --file ./dump.json
 ```
 
 ---
 
 ## ✅ Conclusion
 
-Use `mongosh` locally or connect to Atlas in prod:
+Use this cheat sheet to:
 
-* ⚙️ Debug and inspect real data
-* 🔁 Query before embedding into API logic
-* 🔍 Validate fraud logic, aggregations, filters
+* ⚙️ Debug and inspect real MongoDB data
+* 🔄 Run aggregation queries before embedding them into your app
+* 🔍 Validate fraud filters, 3DS logic, and subscription statuses
 
-Stateless, powerful, and works across local and cloud.
+For deployment, API design, and Streamlit integration, refer to the [full guide](/docs/streamlit.md).
