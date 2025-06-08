@@ -43,7 +43,7 @@ down: ## Stop MongoDB
 	docker-compose down
 
 test: ## Run tests
-	$(PYTHON) -m pytest tests/
+	$(PYTHON) -m pytest -v --tb=short tests/
 
 load: check_env ## Load latest Supabase dump from GCS to MongoDB
 	ENV=$(ENV) $(PYTHON) scripts/gcs_to_mongo.py
