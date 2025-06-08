@@ -11,8 +11,8 @@ ENV = os.getenv("ENV", "DEV").upper()
 # MongoDB connection
 if ENV == "DEV":
     MONGO_URI = os.getenv("MONGO_URI", "mongodb://localhost:27017")
-else:  # TEST or PROD
-    MONGO_URI = os.getenv("MONGO_URI", "mongodb://mongo:27017")
+elif ENV == "PROD":
+    MONGO_URI = os.getenv("MONGO_URI")
 
 #client = MongoClient(MONGO_URI)
 client = MongoClient(MONGO_URI, tlsCAFile=certifi.where())
@@ -27,6 +27,14 @@ def convert_objectid(doc):
 @app.get("/")
 def root():
     return {"status": "API is live"}
+
+@app.get("/ping-mongo")
+def test_mongo():
+    try:
+        db.command("ping")
+        return {"status": "MongoDB connection OK"}
+    except Exception as e:
+        return {"status": "FAILED", "error": str(e)}
 
 @app.get("/charges/fraud")
 def get_fraudulent_charges():
