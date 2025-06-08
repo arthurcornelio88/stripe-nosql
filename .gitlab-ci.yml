@@ -17,8 +17,8 @@ before_script:
   - mkdir -p ~/.ssh
   - echo "$GITHUB_SSH_KEY_B64" | base64 -d > ~/.ssh/id_rsa
   - chmod 400 ~/.ssh/id_rsa
-  - 'echo "$GITHUB_SSH_KEY_B64" | base64 -d | head -n 5'
-  - 'echo "$GITHUB_SSH_KEY_B64" | base64 -d | ssh-keygen -lf - || echo "❌ Broken key"''
+  - echo "$GITHUB_SSH_KEY_B64" | base64 -d | head -n 5
+  - echo "$GITHUB_SSH_KEY_B64" | base64 -d | ssh-keygen -lf - || echo "❌ Broken key"
   - ssh-add ~/.ssh/id_rsa
   - ssh-keyscan github.com >> ~/.ssh/known_hosts
   - ssh -T git@github.com || true
