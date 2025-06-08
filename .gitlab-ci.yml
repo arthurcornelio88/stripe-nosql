@@ -7,8 +7,6 @@ services:
     alias: mongo
 
 variables:
-  ENV: TEST
-  MONGO_URI: mongodb://mongo:27017
   PYTHONPATH: $CI_PROJECT_DIR
   UV_CACHE_DIR: $CI_PROJECT_DIR/.uv
 
@@ -31,8 +29,7 @@ test:
 deploy:
   stage: deploy
   script:
-    - echo "🚀 CI Deploy: make prod_deploy"
+    - 'echo "🚀 CI Deploy: make prod_deploy"'
     - make prod_deploy ENV=PROD
   only:
-    - tags
     - main
