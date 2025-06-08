@@ -1,24 +1,38 @@
 stages:
-  - run
+  - test
+  - deploy
 
 services:
   - name: mongo:7
     alias: mongo
 
 variables:
-  ENV: test
+  ENV: TEST
   MONGO_URI: mongodb://mongo:27017
   PYTHONPATH: $CI_PROJECT_DIR
+  UV_CACHE_DIR: $CI_PROJECT_DIR/.uv
 
 before_script:
-  - export PATH="$HOME/.local/bin:$PATH"
-  - export PYTHONPATH="$(pwd)" 
-  - make uv
+  - python3 -m venv .venv
+  - source .venv/bin/activate
+  - pip install uv || pip install --upgrade pip && pip install uv
+  - uv sync
+  - echo "✅ ENV=$ENV | CI=$CI | PYTHONPATH=$PYTHONPATH"
 
-run:
-  stage: run
+test:
+  stage: test
   script:
-    - echo "🚀 Running make all"
-    - make all
+    - make load
+    - make test
   only:
+    - main
+    - merge_requests
+
+deploy:
+  stage: deploy
+  script:
+    - echo "🚀 CI Deploy: make prod_deploy"
+    - make prod_deploy ENV=PROD
+  only:
+    - tags
     - main
