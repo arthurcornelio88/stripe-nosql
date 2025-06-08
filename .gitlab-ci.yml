@@ -23,7 +23,6 @@ test:
   stage: test
   script:
     - make test
-    - make load
   only:
     - main
     - merge_requests
@@ -32,6 +31,6 @@ deploy:
   stage: deploy
   script:
     - 'echo "🚀 CI Deploy: make prod_deploy"'
-    - make prod_deploy ENV=PROD
+    - make all ENV=PROD
   only:
     - main
