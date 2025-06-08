@@ -22,6 +22,10 @@ def convert_objectid(doc):
     doc["_id"] = str(doc["_id"])
     return doc
 
+@app.get("/")
+def root():
+    return {"status": "API is live"}
+
 @app.get("/charges/fraud")
 def get_fraudulent_charges():
     pipeline = [
