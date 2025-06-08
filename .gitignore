@@ -12,6 +12,8 @@ wheels/
 #CI ssh keys
 ci_deploy_key
 ci_deploy_key.pub
+ci_deploy_key_rsa
+ci_deploy_key_rsa.pub
 
 # GCP
 gcp_service_account.json

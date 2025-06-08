@@ -67,7 +67,7 @@ make mongosh
 
 To learn manual connection URIs, example aggregation queries, and how to debug your collections:
 
-👉 Read [📄 MongoDB Shell & Query Cheatsheet](docs/mongosh_guide.md)
+👉 Read [📄 MongoDB Shell & Query Cheatsheet](docs/mongosh.md)
 
 ---
 
@@ -132,6 +132,90 @@ ENV=PROD python scripts/gcs_to_mongo.py
 | Full local pipeline  | Makefile  | `make all ENV=DEV`          |
 | Deploy to cloud      | Makefile  | `make prod_deploy ENV=PROD` |
 | Run tests            | pytest    | `make test`                 |
+
+---
+
+## 🔐 `.env` Configuration & GitLab → GitHub SSH Deploy
+
+### 🧪 Local `.env` setup
+
+At the root of the repo, create a file named `.env` with:
+
+```env
+ENV=DEV
+MONGO_URI=mongodb://localhost:27017
+GCP_CREDS_FILE=your-raw-json-credentials-content-here
+```
+
+If you're using **MongoDB Atlas** in production:
+
+```env
+ENV=PROD
+MONGO_URI=mongodb+srv://<user>:<pass>@cluster.mongodb.net/supabase_snapshot
+```
+
+> 🧬 These variables are loaded automatically by `python-dotenv` and are used across scripts and Streamlit/FastAPI.
+
+---
+
+### 🚀 GitLab CI/CD SSH access to GitHub (for push-to-deploy)
+
+To enable **CI/CD pipelines on GitLab to push to GitHub** (for example to trigger Streamlit Cloud redeploys), follow these steps:
+
+#### 1. Generate a deploy key (RSA recommended)
+
+Run locally:
+
+```bash
+ssh-keygen -t rsa -b 4096 -C "gitlab-ci@nosql" -f deploy_key_gitlab_to_github_rsa
+```
+
+This creates two files:
+
+* `deploy_key_gitlab_to_github_rsa` (private key)
+* `deploy_key_gitlab_to_github_rsa.pub` (public key)
+
+#### 2. Add the **public key** to GitHub
+
+* Go to **GitHub → Your repo → Settings → Deploy Keys**
+* Click **"Add deploy key"**
+* Title: `GitLab CI deploy`
+* Paste the **contents of `deploy_key_gitlab_to_github_rsa.pub`**
+* ✅ Enable **“Allow write access”**
+
+#### 3. Add the **private key** to GitLab CI/CD
+
+* Go to **GitLab → Settings → CI/CD → Variables**
+* Add a new variable:
+
+| Key              | Value                                         | Type        |
+| ---------------- | --------------------------------------------- | ----------- |
+| `GITHUB_SSH_KEY` | Contents of `deploy_key_gitlab_to_github_rsa` | 📄 **File** |
+
+> ❗ Must be a **file-type** variable for it to work with `ssh-agent`.
+
+#### 4. SSH activation in `.gitlab-ci.yml`
+
+Your pipeline should include:
+
+```yaml
+before_script:
+  - eval "$(ssh-agent -s)"
+  - mkdir -p ~/.ssh
+  - echo "$GITHUB_SSH_KEY" > ~/.ssh/id_rsa
+  - chmod 600 ~/.ssh/id_rsa
+  - ssh-keyscan github.com >> ~/.ssh/known_hosts
+```
+
+#### 5. Git push inside your Makefile
+
+In your `Makefile`, ensure the push command uses:
+
+```makefile
+git push github HEAD:main
+```
+
+> 🛡️ SSH setup is only required if you're triggering GitHub deploys from GitLab CI via `make all ENV=PROD`.
 
 ---
 
