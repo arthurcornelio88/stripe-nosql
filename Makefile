@@ -56,7 +56,7 @@ ui: ## Launch Streamlit dashboard (DEV only)
 
 push_to_github: ## Push code to GitHub for Streamlit Cloud
 	git remote -v | grep github || git remote add github $(GITHUB_REPO)
-	git push github main HEAD:main
+	git push github HEAD:main
 	@echo "✅ Pushed to GitHub for Streamlit Cloud"
 
 # ----------- Utils -----------
