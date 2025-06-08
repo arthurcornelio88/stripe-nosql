@@ -10,7 +10,12 @@ app = FastAPI()
 
 ENV = os.getenv("ENV", "DEV").upper()
 
-API_URL = "http://localhost:8000"
+if ENV == "DEV":
+    API_URL = "http://localhost:8000"
+elif ENV in ["TEST", "PROD"]:
+    API_URL = os.getenv("API_URL")
+else:
+    raise ValueError("Invalid ENV variable. Must be DEV, TEST, or PROD.")
 
 st.title("📊 Supabase Snapshot Explorer")
 
