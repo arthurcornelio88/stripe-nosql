@@ -27,12 +27,12 @@ endif
 else
 	@echo "🏗️  Running in CI/CD (ENV=$(ENV))"
 	$(MAKE) load
-	$(MAKE) push_to_github
+	$(MAKE) push_to_github HEAD:main
 endif
 
 prod_deploy: check_env ## Run only data load + GitHub push (PROD)
 	$(MAKE) load
-	$(MAKE) push_to_github
+	$(MAKE) push_to_github HEAD:main
 
 # ----------- Pipeline Components -----------
 
