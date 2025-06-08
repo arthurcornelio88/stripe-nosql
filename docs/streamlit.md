@@ -1,154 +1,168 @@
-# 🗃️ MongoDB + FastAPI + Streamlit Integration Guide (DEV & PROD Modes)
+# 📦 Supabase Snapshot — FastAPI + MongoDB + Streamlit
 
-This guide explains how to integrate **MongoDB**, **FastAPI**, and **Streamlit**, supporting both **local development (DEV)** and **production deployment (PROD)** with MongoDB Atlas and Render.
+This repository bridges OLTP and OLAP workflows using **MongoDB** as a NoSQL intermediary, offering a clean local + cloud interface to load and explore Supabase-style JSON exports.
 
----
-
-## 🧩 Architecture Overview
-
-```mermaid
-graph TD
-    GCS[Supabase JSON dump on GCS] --> MongoDB
-    MongoDB --> FastAPI
-    FastAPI --> Streamlit UI
-```
-
-* MongoDB stores Supabase-style JSON exports.
-* FastAPI exposes REST endpoints over HTTP.
-* Streamlit interacts with those endpoints to explore the data.
+It supports full-stack deployment across **DEV** (local) and **PROD** (Render + Streamlit Cloud) environments using a `Makefile`-based pipeline and environment-driven logic.
 
 ---
 
-## ⚙️ 1. MongoDB Setup
+## 🚀 Getting Started
 
-### 🔧 Local (DEV mode)
+### 🌀 Clone the repository
 
-Use Docker Compose:
+```bash
+git clone https://gitlab.com/stripe_b2/nosql.git
+cd nosql
+````
 
-```yaml
-services:
-  mongo:
-    image: mongo:7
-    ports:
-      - "27017:27017"
-    volumes:
-      - mongo_data:/data/db
-volumes:
-  mongo_data:
-```
+### 🐍 Set up your virtual environment
 
-Import your Supabase exports into collections (`customers`, `charges`, `subscriptions`, etc.).
+We recommend [`uv`](https://github.com/astral-sh/uv) for fast dependency installs:
 
-### ☁️ Production (PROD mode)
-
-Use MongoDB Atlas:
-
-1. Create a free cluster on [cloud.mongodb.com](https://cloud.mongodb.com)
-2. Add a database user (username/password)
-3. Under **Network Access**, allow static IPs from Render
-4. Copy your connection URI from "Connect your application"
-
----
-
-## 🚀 2. FastAPI Backend (DEV/PROD aware)
-
-### 📁 `app/api/main.py`
-
-```python
-from fastapi import FastAPI
-from pymongo import MongoClient
-from bson import ObjectId
-import os, certifi
-
-app = FastAPI()
-ENV = os.getenv("ENV", "DEV").upper()
-
-if ENV == "DEV":
-    MONGO_URI = os.getenv("MONGO_URI", "mongodb://localhost:27017")
-elif ENV == "PROD":
-    MONGO_URI = os.getenv("MONGO_URI")
-else:
-    raise ValueError("Invalid ENV variable. Must be DEV or PROD")
-
-client = MongoClient(MONGO_URI, tlsCAFile=certifi.where())
-db = client["supabase_snapshot"]
-
-def convert_objectid(doc):
-    if doc: doc["_id"] = str(doc["_id"])
-    return doc
-
-@app.get("/customers")
-def list_customers():
-    return list(db.customers.find({}, {"id": 1, "name": 1, "email": 1, "_id": 0}))
-
-@app.get("/customers/{customer_id}")
-def get_customer(customer_id: str):
-    return convert_objectid(db.customers.find_one({"id": customer_id}))
+```bash
+uv venv
+source .venv/bin/activate
+uv sync
 ```
 
 ---
 
-## 🖥️ 3. Streamlit Frontend (DEV/PROD aware)
+## 🛠️ Project Pipeline via Makefile
 
-### 📁 `app/ui/streamlit_app.py`
+Run `make help` to list all available targets.
 
-```python
-import streamlit as st
-import requests
-import os
+### 🔧 DEV Mode (local development)
 
-ENV = os.getenv("ENV", "DEV").upper()
-if ENV == "DEV":
-    API_URL = "http://localhost:8000"
-elif ENV in ["TEST", "PROD"]:
-    API_URL = os.getenv("API_URL")
-else:
-    raise ValueError("Invalid ENV variable. Must be DEV, TEST, or PROD")
+```bash
+make all ENV=DEV
+```
 
-customers = requests.get(f"{API_URL}/customers").json()
-selected = st.selectbox("Choose customer", [f"{c['name']} ({c['email']})" for c in customers])
+This starts:
 
-customer_id = [c['id'] for c in customers if f"{c['name']} ({c['email']})" == selected][0]
-data = requests.get(f"{API_URL}/customers/{customer_id}").json()
-st.write(data)
+* MongoDB via Docker
+* A data load from GCS (or local)
+* FastAPI backend via Uvicorn
+* Streamlit dashboard in a new tab
+
+### 🚀 PROD Mode (CI/CD & cloud deployments)
+
+```bash
+make prod_deploy ENV=PROD
+```
+
+This runs:
+
+* Supabase → MongoDB data ingestion
+* Git push to GitHub (for Streamlit Cloud triggers)
+
+---
+
+## 🧠 MongoDB Shell (Local & Atlas)
+
+Explore your database manually:
+
+```bash
+make mongosh
+```
+
+To learn manual connection URIs, example aggregation queries, and how to debug your collections:
+
+👉 Read [📄 MongoDB Shell & Query Cheatsheet](docs/mongosh_guide.md)
+
+---
+
+## 🔌 Backend API — FastAPI
+
+The backend is environment-aware (`ENV=DEV|PROD`) and connects to either local Mongo or Atlas. It exposes:
+
+* `/customers`, `/customers/{id}`
+* `/subscriptions/active`
+* `/charges/fraud`
+* `/payment_intents/3ds`
+
+Run locally:
+
+```bash
+make api
 ```
 
 ---
 
-## 📎 Environment Configuration
+## 📊 Frontend UI — Streamlit
 
-### `.env`
+The Streamlit app reads from your backend API and lets you:
 
-```env
-ENV=PROD
-MONGO_URI="mongodb+srv://<user>:<password>@your-cluster.mongodb.net/supabase_snapshot?retryWrites=true&w=majority"
-API_URL="https://your-api.onrender.com"
+* Inspect customers, subscriptions, payment intents, and fraud patterns
+* Query by endpoint
+* Visualize 3DS usage and suspicious charges
+
+Run locally:
+
+```bash
+make ui
 ```
 
-Load it using `python-dotenv` or Render's environment tab.
+---
+
+## 📜 Data Loader — `gcs_to_mongo.py`
+
+The primary data ingestion script:
+
+* Downloads the latest Supabase-style `db_dump_prod_*.json` from GCS
+* Parses JSON by collection
+* Writes to MongoDB
+
+Run standalone:
+
+```bash
+ENV=PROD python scripts/gcs_to_mongo.py
+```
 
 ---
 
-## ☁️ 4. Render Deployment (for PROD)
+## ✅ Command Recap
 
-1. Push your FastAPI repo to GitLab
-2. Create a new **Web Service** on [Render.com](https://render.com)
-
-   * Build Command: `pip install -r requirements.txt`
-   * Start Command: `uvicorn app.api.main:app --host 0.0.0.0 --port 10000`
-3. Add environment variables in Render:
-
-   * `ENV=PROD`
-   * `MONGO_URI=...`
-4. Get Render's **outbound IPs** (e.g. `18.156.158.53`) and whitelist them in MongoDB Atlas
+| Task                 | Tool      | Command                     |
+| -------------------- | --------- | --------------------------- |
+| Start MongoDB        | Docker    | `make up`                   |
+| Load JSON to MongoDB | Python    | `make load`                 |
+| Launch API (DEV)     | FastAPI   | `make api`                  |
+| Launch UI (DEV)      | Streamlit | `make ui`                   |
+| Query DB manually    | mongosh   | `make mongosh`              |
+| Full local pipeline  | Makefile  | `make all ENV=DEV`          |
+| Deploy to cloud      | Makefile  | `make prod_deploy ENV=PROD` |
+| Run tests            | pytest    | `make test`                 |
 
 ---
 
-## ✅ Conclusion
+## 📚 Documentation
 
-| Mode | Mongo                 | API        | Frontend              |
-| ---- | --------------------- | ---------- | --------------------- |
-| DEV  | Local (Docker)        | Uvicorn    | Streamlit (localhost) |
-| PROD | MongoDB Atlas (cloud) | Render API | Streamlit Cloud       |
+* [🥪 MongoDB Shell & Query Cheatsheet](docs/mongosh_guide.md) — manual queries & shell usage
+* [💃 Integration Guide (Mongo + FastAPI + Streamlit)](docs/streamlit.md) — fullstack architecture, local & cloud setup
 
-This setup gives you a secure, modular pipeline from raw Supabase exports to a hosted Streamlit UI that works in both development and production contexts.
+---
+
+## 🌐 Architecture
+
+```
+Supabase JSON (GCS/local)
+         ↓
+      MongoDB
+         ↓
+    FastAPI Backend
+         ↓
+   Streamlit Frontend
+```
+
+---
+
+## ☁️ Deployment Matrix
+
+| Mode | MongoDB          | API     | UI                  |
+| ---- | ---------------- | ------- | ------------------- |
+| DEV  | Local via Docker | Uvicorn | Streamlit localhost |
+| PROD | MongoDB Atlas    | Render  | Streamlit Cloud     |
+
+---
+
+Want to contribute or adapt this setup to your own OLAP/OLTP bridge? PRs welcome ✨
