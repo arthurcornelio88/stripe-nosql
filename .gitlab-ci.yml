@@ -22,8 +22,8 @@ before_script:
 test:
   stage: test
   script:
-    - make load
     - make test
+    - make load
   only:
     - main
     - merge_requests
