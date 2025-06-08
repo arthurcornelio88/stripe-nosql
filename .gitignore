@@ -9,6 +9,10 @@ wheels/
 # Virtual environments
 .venv
 
+#CI ssh keys
+ci_deploy_key
+ci_deploy_key.pub
+
 # GCP
 gcp_service_account.json
 
