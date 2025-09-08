@@ -55,6 +55,11 @@ ui: ## Launch Streamlit dashboard (DEV only)
 	$(PYTHON) -m streamlit run app/ui/streamlit_app.py
 
 push_to_github: ## Push code to GitHub for Streamlit Cloud
+	@echo "📝 Staging all changes..."
+	git add .
+	@echo "💾 Committing changes..."
+	git commit -m "Auto-deploy: Updated NoSQL components $(shell date '+%Y-%m-%d %H:%M:%S')" || echo "No changes to commit"
+	@echo "🚀 Pushing to GitHub..."
 	git remote -v | grep github || git remote add github $(GITHUB_REPO)
 	git push github HEAD:main
 	@echo "✅ Pushed to GitHub for Streamlit Cloud"

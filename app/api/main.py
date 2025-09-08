@@ -50,6 +50,14 @@ def get_fraudulent_charges():
 def get_active_subscriptions():
     return [convert_objectid(doc) for doc in db.subscriptions.find({"status": "active"})]
 
+@app.get("/subscriptions")
+def get_all_subscriptions():
+    return [convert_objectid(doc) for doc in db.subscriptions.find({})]
+
+@app.get("/charges")  
+def get_all_charges():
+    return [convert_objectid(doc) for doc in db.charges.find({})]
+
 @app.get("/payment_intents/3ds")
 def get_3ds_payment_intents():
     return [convert_objectid(doc) for doc in db.payment_intents.find({
