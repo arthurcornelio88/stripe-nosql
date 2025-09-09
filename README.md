@@ -8,8 +8,10 @@ It supports full-stack deployment across **DEV** (local) and **PROD** (Render + 
 
 [![NoSQL Pipeline Demo](docs/video/nosql_thumbnail.jpg)](docs/video/nosql_readable.mp4)
 
+**📥 [Download Demo Video](docs/video/nosql_readable.mp4)** *(1.2MB)*  
 *Interactive MongoDB dashboard: JSON ingestion → Analytics → Streamlit visualization*  
-👆 *Click the image to watch the full demo video*
+
+> � **How to watch:** Click the thumbnail or download link above to save the video locally and watch the complete demo
 
 ---
 
