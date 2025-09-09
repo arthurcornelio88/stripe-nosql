@@ -6,12 +6,10 @@ It supports full-stack deployment across **DEV** (local) and **PROD** (Render + 
 
 ## 🎬 Demo Video
 
-<video controls width="800">
-  <source src="docs/video/nosql_readable.mp4" type="video/mp4">
-  Your browser does not support the video tag...
-</video>
+[![NoSQL Pipeline Demo](docs/video/nosql_thumbnail.jpg)](docs/video/nosql_readable.mp4)
 
-*Interactive MongoDB dashboard: JSON ingestion → Analytics → Streamlit visualization*
+*Interactive MongoDB dashboard: JSON ingestion → Analytics → Streamlit visualization*  
+👆 *Click the image to watch the full demo video*
 
 ---
 
